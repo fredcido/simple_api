@@ -45,4 +45,16 @@ $app->get('/hr/{employee}', function (Request $request, Response $response, arra
 	return $response->withJson($return);
 });
 
+$app->group('/dlg', function () use ($app) {
+	$app->post('/pwd', function ($request, $response) {
+		$body = $request->getBody();
+		$data = json_decode($body, true);
+
+		file_put_contents('api.log', print_r($data, true));
+
+		var_dump($data);exit;
+	});
+
+});
+
 $app->run();
