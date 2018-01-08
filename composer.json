@@ -1,6 +1,7 @@
 {
     "name": "frederico/api",
     "require": {
-        "slim/slim": "^3.9"
+        "slim/slim": "^3.9",
+        "monolog/monolog": "^1.23"
     }
 }
