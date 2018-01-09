@@ -99,13 +99,13 @@ $app->post('/dlg', function ($request, $response) use ($app) {
 	file_put_contents('api.log', print_r($data, true));
 
 	$responseText = "No action identified";
-	if (!empty($data['action'])) {
-		switch ($data['action']) {
+	if (!empty($data['result']['action'])) {
+		switch ($data['result']['action']) {
 		case 'unlock.account':
 			$responseText = resetPwd($data);
 			break;
 		default:
-			$responseText = sprintf("The action '%s' is not supported", $data['action']);
+			$responseText = sprintf("The action '%s' is not supported", $data['result']['action']);
 		}
 	}
 
