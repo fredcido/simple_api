@@ -77,11 +77,11 @@ $app->group('/dlg', function () use ($app) {
 
 		$return = responseDialog("I could not communicate propertly with the backend");
 
-		if (empty($data['queryResult']['parameters']['account_number'])) {
+		if (empty($data['result']['parameters']['account_number'])) {
 			$return = responseDialog("Sorry, you didn’t provide a valid account number, I was expecting something more like A999999");
 		}
 
-		$accountNumber = $data['queryResult']['parameters']['account_number'];
+		$accountNumber = $data['result']['parameters']['account_number'];
 
 		$accounts = [
 			'X9999' => 'unlocked',
