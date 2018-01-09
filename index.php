@@ -65,7 +65,7 @@ $app->group('/dlg', function () use ($app) {
 			"displayText" => $text,
 			"source" => "one-desk-api",
 			"contextOut" => [],
-            "data": []
+			"data" => [],
 		];
 	};
 
