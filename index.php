@@ -59,9 +59,10 @@ $app->get('/hr/{employee}', function (Request $request, Response $response, arra
 
 function responseDialog($text) {
 	return [
+		"fulfillmentText" => $text,
 		"speech" => $text,
 		"displayText" => $text,
-		"source" => "one-desk-api",
+		"webhookSource" => "one-desk-api",
 		//"contextOut" => [],
 		//"data" => [],
 	];
@@ -71,7 +72,7 @@ function resetPwd($data) {
 	$responseText = "I could not communicate propertly with the backend";
 
 	if (empty($data['result']['parameters']['account_number'])) {
-		$responseText = "Sorry, you didn’t provide a valid account number, I was expecting something more like A999999";
+		$responseText = "Sorry, you didn’t provide a valid account number, I was expecting something more like A9999";
 	}
 
 	$accountNumber = $data['result']['parameters']['account_number'];
@@ -92,6 +93,31 @@ function resetPwd($data) {
 	return $responseText;
 }
 
+function holidaysLeft($data) {
+	$responseText = "I could not communicate propertly with the backend";
+
+	if (empty($data['result']['parameters']['account_number'])) {
+		$responseText = "Sorry, you didn’t provide a valid employee number, I was expecting something more like A9999";
+	}
+
+	$accountNumber = $data['result']['parameters']['account_number'];
+
+	$accounts = [
+		'X9999' => 20,
+		'T7777' => 0,
+	];
+
+	if (!isset($accounts[$accountNumber])) {
+		$responseText = "Sorry, the employee number you provided does not match with any valid record in my database";
+	} else if (empty($accounts[$accountNumber])) {
+		$responseText = "It seems that there is no more leave days remaining for you, what a bummer";
+	} else {
+		$responseText = sprintf("You still have %d leave days remaining", $accounts[$accountNumber]);
+	}
+
+	return $responseText;
+}
+
 $app->post('/dlg', function ($request, $response) use ($app) {
 	$body = $request->getBody();
 	$data = json_decode($body, true);
@@ -103,6 +129,9 @@ $app->post('/dlg', function ($request, $response) use ($app) {
 		switch ($data['result']['action']) {
 		case 'unlock.account':
 			$responseText = resetPwd($data);
+			break;
+		case 'holidays.left':
+			$responseText = holidaysLeft($data);
 			break;
 		default:
 			$responseText = sprintf("The action '%s' is not supported", $data['result']['action']);
