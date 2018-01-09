@@ -57,48 +57,60 @@ $app->get('/hr/{employee}', function (Request $request, Response $response, arra
 	return $response->withJson($return);
 });
 
-$app->group('/dlg', function () use ($app) {
+function responseDialog($text) {
+	return [
+		"speech" => $text,
+		"displayText" => $text,
+		"source" => "one-desk-api",
+		//"contextOut" => [],
+		//"data" => [],
+	];
+};
 
-	function responseDialog($text) {
-		return [
-			"speech" => $text,
-			"displayText" => $text,
-			"source" => "one-desk-api",
-			//"contextOut" => [],
-			//"data" => [],
-		];
-	};
+function resetPwd($data) {
+	$responseText = "I could not communicate propertly with the backend";
 
-	$app->post('/pwd', function ($request, $response) {
-		$body = $request->getBody();
-		$data = json_decode($body, true);
+	if (empty($data['result']['parameters']['account_number'])) {
+		$responseText = "Sorry, you didn’t provide a valid account number, I was expecting something more like A999999";
+	}
 
-		file_put_contents('api.log', print_r($data, true));
+	$accountNumber = $data['result']['parameters']['account_number'];
 
-		$return = responseDialog("I could not communicate propertly with the backend");
+	$accounts = [
+		'X9999' => 'unlocked',
+		'T7777' => 'failed',
+	];
 
-		if (empty($data['result']['parameters']['account_number'])) {
-			$return = responseDialog("Sorry, you didn’t provide a valid account number, I was expecting something more like A999999");
+	if (empty($accounts[$accountNumber])) {
+		$responseText = "Sorry, the account number you provided does not match with any valid record in my database";
+	} else if ('failed' == $accounts[$accountNumber]) {
+		$responseText = "Sorry, I was not able to unlock the account provided";
+	} else {
+		$responseText = "Your account was successfully unlocked";
+	}
+
+	return $responseText;
+}
+
+$app->post('/dlg', function ($request, $response) use ($app) {
+	$body = $request->getBody();
+	$data = json_decode($body, true);
+
+	file_put_contents('api.log', print_r($data, true));
+
+	$responseText = "No action identified";
+	if (!empty($data['action'])) {
+		switch ($data['action']) {
+		case 'unlock.account':
+			$responseText = resetPwd($data);
+			break;
+		default:
+			$responseText = sprintf("The action '%s' is not supported", $data['action']);
 		}
+	}
 
-		$accountNumber = $data['result']['parameters']['account_number'];
-
-		$accounts = [
-			'X9999' => 'unlocked',
-			'T7777' => 'failed',
-		];
-
-		if (empty($accounts[$accountNumber])) {
-			$return = responseDialog("Sorry, the account number you provided does not match with any valid record in my database");
-		} else if ('failed' == $accounts[$accountNumber]) {
-			$return = responseDialog("Sorry, I was not able to unlock the account provided");
-		} else {
-			$return = responseDialog("Your account was successfully unlocked");
-		}
-
-		return $response->withJson($return);
-	});
-
+	$return = responseDialog($responseText);
+	return $response->withJson($return);
 });
 
 $app->run();
