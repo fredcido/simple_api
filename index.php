@@ -39,6 +39,27 @@ $app->post('/pwd', function (Request $request, Response $response, array $args) 
 	return $response->withJson($return);
 });
 
+$app->post('/expense', function (Request $request, Response $response, array $args) {
+	$body = $request->getBody();
+	$data = json_decode($body, true);
+
+	$reports = [
+		'EE1001' => ['status' => 'assessment'],
+		'EE1002' => ['status' => 'approved', 'paymentDate' => '2018-01-14'],
+		'EE1003' => ['status' => 'declined', 'reason' => 'Missing invoice file'],
+	];
+
+	if (empty($data)) {
+		return $response->withStatus(400);
+	} else if (empty($reports[$data['report']])) {
+		return $response->withStatus(404);
+	}
+
+	$return = $reports[$data['report']];
+
+	return $response->withJson($return);
+});
+
 $app->get('/hr/{employee}', function (Request $request, Response $response, array $args) {
 
 	$employees = [
@@ -57,22 +78,23 @@ $app->get('/hr/{employee}', function (Request $request, Response $response, arra
 	return $response->withJson($return);
 });
 
-function responseDialog($text) {
+function responseDialog($text, $events = []) {
 	return [
 		"fulfillmentText" => $text,
 		"speech" => $text,
 		"displayText" => $text,
 		"webhookSource" => "one-desk-api",
+		"followupEventInput" => $events,
 		//"contextOut" => [],
 		//"data" => [],
 	];
 };
 
-function resetPwd($data) {
-	$responseText = "I could not communicate propertly with the backend";
+function resetPwd(&$data) {
+	$return = responseDialog("I could not communicate propertly with the backend");
 
 	if (empty($data['result']['parameters']['account_number'])) {
-		$responseText = "Sorry, you didn’t provide a valid account number, I was expecting something more like A9999";
+		$return = responseDialog("Sorry, you didn’t provide a valid account number, I was expecting something more like A9999");
 	}
 
 	$accountNumber = $data['result']['parameters']['account_number'];
@@ -83,17 +105,22 @@ function resetPwd($data) {
 	];
 
 	if (empty($accounts[$accountNumber])) {
-		$responseText = "Sorry, the account number you provided does not match with any valid record in my database";
+		$event = [
+			"name" => "account-number-invalid",
+			"languageCode" => "en",
+		];
+
+		$return = responseDialog("Sorry, the account number you provided does not match with any valid record in my database", $event);
 	} else if ('failed' == $accounts[$accountNumber]) {
-		$responseText = "Sorry, I was not able to unlock the account provided";
+		$return = responseDialog("Sorry, I was not able to unlock the account provided");
 	} else {
-		$responseText = "Your account was successfully unlocked";
+		$return = responseDialog("Your account was successfully unlocked");
 	}
 
-	return $responseText;
+	return $return;
 }
 
-function holidaysLeft($data) {
+function holidaysLeft(&$data) {
 	$responseText = "I could not communicate propertly with the backend";
 
 	if (empty($data['result']['parameters']['account_number'])) {
@@ -128,17 +155,16 @@ $app->post('/dlg', function ($request, $response) use ($app) {
 	if (!empty($data['result']['action'])) {
 		switch ($data['result']['action']) {
 		case 'unlock.account':
-			$responseText = resetPwd($data);
+			$return = resetPwd($data);
 			break;
 		case 'holidays.left':
-			$responseText = holidaysLeft($data);
+			$return = holidaysLeft($data);
 			break;
 		default:
-			$responseText = sprintf("The action '%s' is not supported", $data['result']['action']);
+			$return = responseDialog(sprintf("The action '%s' is not supported", $data['result']['action']));
 		}
 	}
 
-	$return = responseDialog($responseText);
 	return $response->withJson($return);
 });
 
