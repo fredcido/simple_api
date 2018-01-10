@@ -79,14 +79,15 @@ $app->get('/hr/{employee}', function (Request $request, Response $response, arra
 });
 
 function responseDialog($text, $events = []) {
+
 	return [
 		"fulfillmentText" => $text,
-		"speech" => $text,
-		"displayText" => $text,
-		"webhookSource" => "one-desk-api",
+		//"speech" => $text,
+		//"displayText" => $text,
+		"source" => "one-desk-api",
 		"followupEventInput" => $events,
-		//"contextOut" => [],
-		//"data" => [],
+		"outputContexts" => [],
+		"payload" => [],
 	];
 };
 
@@ -172,7 +173,8 @@ $app->post('/dlg', function ($request, $response) use ($app) {
 		}
 	}
 
-	return $response->withJson($return);
+	return $response->withJson($return)
+		->withHeader('Content-Type', 'application/json');
 });
 
 $app->run();
