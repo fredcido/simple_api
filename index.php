@@ -90,14 +90,14 @@ function responseDialog($text, $events = []) {
 	];
 };
 
-function resetPwd(&$data) {
+function resetPwd($data) {
 	$return = responseDialog("I could not communicate propertly with the backend");
 
-	if (empty($data['result']['parameters']['account_number'])) {
+	if (empty($data['parameters']['account_number'])) {
 		$return = responseDialog("Sorry, you didn’t provide a valid account number, I was expecting something more like A9999");
 	}
 
-	$accountNumber = $data['result']['parameters']['account_number'];
+	$accountNumber = $data['parameters']['account_number'];
 
 	$accounts = [
 		'X9999' => 'unlocked',
@@ -120,14 +120,14 @@ function resetPwd(&$data) {
 	return $return;
 }
 
-function holidaysLeft(&$data) {
+function holidaysLeft($data) {
 	$responseText = "I could not communicate propertly with the backend";
 
-	if (empty($data['result']['parameters']['account_number'])) {
+	if (empty($data['parameters']['account_number'])) {
 		$responseText = "Sorry, you didn’t provide a valid employee number, I was expecting something more like A9999";
 	}
 
-	$accountNumber = $data['result']['parameters']['account_number'];
+	$accountNumber = $data['parameters']['account_number'];
 
 	$accounts = [
 		'X9999' => 20,
@@ -151,17 +151,24 @@ $app->post('/dlg', function ($request, $response) use ($app) {
 
 	file_put_contents('api.log', print_r($data, true));
 
+	$result = [];
+	if (!empty($data['queryResult'])) {
+		$result = $data['queryResult'];
+	} elseif (!empty($data['result'])) {
+		$result = $data['result'];
+	}
+
 	$responseText = "No action identified";
-	if (!empty($data['result']['action'])) {
-		switch ($data['result']['action']) {
+	if (!empty($result['action'])) {
+		switch ($result['action']) {
 		case 'unlock.account':
-			$return = resetPwd($data);
+			$return = resetPwd($result);
 			break;
 		case 'holidays.left':
-			$return = holidaysLeft($data);
+			$return = holidaysLeft($result);
 			break;
 		default:
-			$return = responseDialog(sprintf("The action '%s' is not supported", $data['result']['action']));
+			$return = responseDialog(sprintf("The action '%s' is not supported", $result['action']));
 		}
 	}
 
