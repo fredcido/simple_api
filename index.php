@@ -86,8 +86,8 @@ function responseDialog($text, $events = []) {
 		//"displayText" => $text,
 		"source" => "one-desk-api",
 		"followupEventInput" => $events,
-		"outputContexts" => [],
-		"payload" => [],
+		//"outputContexts" => [],
+		//"payload" => [],
 	];
 };
 
