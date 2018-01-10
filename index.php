@@ -112,7 +112,7 @@ function resetPwd($data) {
 
 	if (empty($accounts[$accountNumber])) {
 		$event = [
-			"name" => "account-number-invalid",
+			"name" => 'unlock.account' == $data['action'] ? "account-number-invalid" : "account-number-invalid-retry",
 			"languageCode" => "en",
 		];
 
@@ -168,6 +168,7 @@ $app->post('/dlg', function ($request, $response) use ($app) {
 	if (!empty($result['action'])) {
 		switch ($result['action']) {
 		case 'unlock.account':
+		case 'unlock.account.invalid':
 			$return = resetPwd($result);
 			break;
 		case 'holidays.left':
