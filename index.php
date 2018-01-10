@@ -80,15 +80,20 @@ $app->get('/hr/{employee}', function (Request $request, Response $response, arra
 
 function responseDialog($text, $events = []) {
 
-	return [
+	$return = [
 		"fulfillmentText" => $text,
 		//"speech" => $text,
 		//"displayText" => $text,
 		"source" => "one-desk-api",
-		"followupEventInput" => $events,
 		//"outputContexts" => [],
 		//"payload" => [],
 	];
+
+	if (!empty($events)) {
+		$return['followupEventInput'] = $events;
+	}
+
+	return $return;
 };
 
 function resetPwd($data) {
